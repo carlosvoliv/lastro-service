@@ -11,7 +11,7 @@ return [
     | by the framework. The "local" disk, as well as a variety of cloud
     | based disks are available to your application for file storage.
     |
-    */
+     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
@@ -26,7 +26,7 @@ return [
     |
     | Supported drivers: "local", "ftp", "sftp", "s3"
     |
-    */
+     */
 
     'disks' => [
 
@@ -59,6 +59,18 @@ return [
             'throw' => false,
             'report' => false,
         ],
+        'zadara' => [
+            'driver' => 's3',
+            'key' => env('ZADARA_ACCESS_KEY'),
+            'secret' => env('ZADARA_SECRET_KEY'),
+            'region' => env('ZADARA_REGION'),
+            'bucket' => env('ZADARA_BUCKET'),
+            'url' => env('ZADARA_ENDPOINT'),
+            'endpoint' => env('ZADARA_ENDPOINT'),
+            'use_path_style_endpoint' => env('ZADARA_USE_PATH_STYLE', false),
+            'throw' => false,
+            'visibility' => 'private', // ou 'public' dependendo da regra de negócio
+        ],
 
     ],
 
@@ -71,7 +83,7 @@ return [
     | `storage:link` Artisan command is executed. The array keys should be
     | the locations of the links and the values should be their targets.
     |
-    */
+     */
 
     'links' => [
         public_path('storage') => storage_path('app/public'),

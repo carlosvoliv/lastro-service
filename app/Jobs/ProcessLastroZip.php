@@ -7,12 +7,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\LastroBatch;
-use Illuminate\Support\Facades\Log;
+use App\Services\LastroProcessorService; // Importar o Service
+use Throwable;
 
 class ProcessLastroZip implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $timeout = 600; // 10 minutos de limite
 
     protected $batchId;
     protected $zipPath;
@@ -23,19 +25,18 @@ class ProcessLastroZip implements ShouldQueue
         $this->zipPath = $zipPath;
     }
 
-    public function handle(): void
+    public function handle(LastroProcessorService $service): void
     {
-        // Por enquanto, apenas finge que trabalha
-        Log::info("Iniciando processamento do Batch: {$this->batchId}");
+        // O Laravel injeta o Service automaticamente aqui
+        $service->processar($this->batchId, $this->zipPath);
+    }
 
-        $batch = LastroBatch::find($this->batchId);
-        if ($batch) {
-            $batch->update(['status' => 'PROCESSANDO']);
-
-            // Simula demora de 5 segundos
-            sleep(5);
-
-            $batch->update(['status' => 'CONCLUIDO_TESTE']);
-        }
+    public function failed(Throwable $exception): void
+    {
+        // Se o Job quebrar feio (ex: falta de memória), marcamos no banco
+        \App\Models\LastroBatch::find($this->batchId)?->update([
+            'status' => 'FALHA_SISTEMA',
+            'resumo_erro' => $exception->getMessage()
+        ]);
     }
 }
