@@ -2,26 +2,40 @@
 
 namespace App\Jobs;
 
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use App\Models\LastroBatch;
+use Illuminate\Support\Facades\Log;
 
 class ProcessLastroZip implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct()
+    protected $batchId;
+    protected $zipPath;
+
+    public function __construct($batchId, $zipPath)
     {
-        //
+        $this->batchId = $batchId;
+        $this->zipPath = $zipPath;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        //
+        // Por enquanto, apenas finge que trabalha
+        Log::info("Iniciando processamento do Batch: {$this->batchId}");
+
+        $batch = LastroBatch::find($this->batchId);
+        if ($batch) {
+            $batch->update(['status' => 'PROCESSANDO']);
+
+            // Simula demora de 5 segundos
+            sleep(5);
+
+            $batch->update(['status' => 'CONCLUIDO_TESTE']);
+        }
     }
 }
