@@ -13,7 +13,17 @@ use Exception;
 class LastroProcessorService
 {
     // Lista de tipos permitidos (Whitelist)
-    const TIPOS_PERMITIDOS = ['ANTIFRAUDE', 'AVERBACAO', 'DOC_IDENT', 'CNH', 'RG', 'CCB', 'COMPROVANTE'];
+    const TIPOS_PERMITIDOS = [
+        'ANTIFRAUDE',
+        'AVERBACAO',
+        'DOC_IDENT',
+        'DOC_IDENT_F', // <--- Adicionado
+        'DOC_IDENT_V', // <--- Adicionado por precaução (Verso)
+        'CNH',
+        'RG',
+        'CCB',
+        'COMPROVANTE'
+    ];
 
     public function processar(string $batchId, string $zipPath)
     {
@@ -113,8 +123,12 @@ class LastroProcessorService
 
         // --- UPLOAD ZADARA ---
         try {
-            // Caminho no Bucket: lastro/ANO/MES/CPF/UUID.pdf
-            $s3Path = 'lastro/' . date('Y/m') . "/$cpfArquivo/" . Str::uuid() . '.pdf';
+            // NOVO CÓDIGO (Respeita o prefixo e remove datas)
+            $prefixo = env('ZADARA_PREFIX', ''); // Pega FIDC_AKRK do .env
+
+            // Monta: FIDC_AKRK / 111.222.333-44 / UUID_NomeOriginal.pdf
+            // Adicionei o nome original depois do UUID para facilitar sua visualização no bucket
+            $s3Path = $prefixo . '/' . $cpfArquivo . '/' . $nomeArquivo;
 
             // Upload via Stream (Baixo consumo de RAM)
             $stream = fopen($pathFisico, 'r');

@@ -57,4 +57,31 @@ class LastroIngestionController extends Controller
             'created_at' => $batch->created_at,
         ]);
     }
+    // Listagem para a Tabela (Com os itens aninhados)
+    public function index()
+    {
+        // Traz os lotes ordenados do mais recente, com seus itens
+        return LastroBatch::with('items')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+    }
+
+    // Download Seguro (Proxy do Zadara)
+    public function downloadItem($itemId)
+    {
+        $item = \App\Models\LastroItem::findOrFail($itemId);
+
+        if (!$item->caminho_zadara) {
+            return response()->json(['error' => 'Arquivo ainda não processado ou com erro'], 404);
+        }
+
+        // Verifica se existe no disco 'zadara'
+        if (!\Illuminate\Support\Facades\Storage::disk('zadara')->exists($item->caminho_zadara)) {
+            return response()->json(['error' => 'Arquivo físico não encontrado no Storage'], 404);
+        }
+
+        // Força o download com o nome original (segurança para o usuário)
+        return \Illuminate\Support\Facades\Storage::disk('zadara')
+            ->download($item->caminho_zadara, $item->nome_original);
+    }
 }
